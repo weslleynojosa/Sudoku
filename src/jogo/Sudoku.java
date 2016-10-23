@@ -1,13 +1,25 @@
 package jogo;
 
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.reader.DimacsReader;
+import org.sat4j.reader.ParseFormatException;
+import org.sat4j.reader.Reader;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.IProblem;
+import org.sat4j.specs.ISolver;
+import org.sat4j.specs.TimeoutException;
+
 import java.io.FileNotFoundException;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.*;
 import javax.swing.*;
 
-import static java.lang.System.*;
+import static java.lang.String.format;
+import static java.lang.System.out;
 
 /**
  * The Sudoku game.
@@ -20,6 +32,7 @@ class Sudoku extends JFrame implements ActionListener {
     private static final Font FONT_NUMBERS = new Font("Monospaced", Font.BOLD, 20);
 
     private static JTextField[][] tfCells = new JTextField[GRID_SIZE][GRID_SIZE];
+    private int nConstrants = 6075;
 
     /**
      * Constructor to setup the game and the UI Components
@@ -77,12 +90,22 @@ class Sudoku extends JFrame implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent event) {
         try {
             PrintWriter writer = new PrintWriter("C:\\Users\\Weslley\\Documents\\sudoku.txt");
             writer.println("c FILE: sudoku.txt");
             writer.println("c");
             writer.println("c SOURCE: Amauri Aires B. Filho and Weslley Nojosa Costa.");
+
+            for (int row = 0; row < GRID_SIZE; ++row) {
+                for (int col = 0; col < GRID_SIZE; ++col) {
+                    if (!tfCells[row][col].getText().isEmpty()) {
+                        nConstrants++;
+                    }
+                }
+            }
+
+            writer.println(format("p cnf 999 %d", nConstrants));
 
             // Lines constraints
             for(int row = 1; row <= 9; row ++){
@@ -249,5 +272,36 @@ class Sudoku extends JFrame implements ActionListener {
         catch (FileNotFoundException b){
             out.println("Error writing to file!");
         }
+
+        // SAT4J
+        ISolver solver = SolverFactory.newDefault();
+        solver.setTimeout(3600); // 1 hour timeout
+        Reader reader = new DimacsReader(solver);
+        // CNF filename is given on the command line
+        try {
+            IProblem problem = reader.parseInstance("C:\\Users\\Weslley\\Documents\\sudoku.txt");
+            if (problem.isSatisfiable()) {
+                out.println("Satisfiable!");
+                for (int premise = 0; premise < problem.model().length; premise++) {
+                    if (problem.model()[premise] > 0) {
+                        int s = problem.model()[premise];
+                        tfCells[((s%100)/10)-1][(((s%100)%10))-1].setText(format("%d", s/100));
+                    }
+                }
+            } else {
+                out.println("Unsatisfiable!");
+            }
+        } catch (FileNotFoundException e) {
+            out.println("File not found.");
+        } catch (ParseFormatException e) {
+            out.println("Problem in parsing.");
+        } catch (IOException e) {
+            out.println(e.getMessage());
+        } catch (ContradictionException e) {
+            out.println("Unsatisfiable (trivial)!");
+        } catch (TimeoutException e) {
+            out.println("Timeout ,sorry!");
+        }
     }
+
 }
