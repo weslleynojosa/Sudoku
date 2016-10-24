@@ -15,3 +15,6 @@
 target/
 Sudoku.iml
 
+# MacOS
+.DS_Store
+C:\*
