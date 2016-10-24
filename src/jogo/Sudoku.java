@@ -15,7 +15,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.*;
 import javax.swing.*;
 
 import static java.lang.String.format;
@@ -28,11 +27,12 @@ import static java.lang.System.out;
  */
 class Sudoku extends JFrame implements ActionListener {
     private static final int GRID_SIZE = 9;
+    private static final int DEFAULT_nCONSTRAINT = 6075;
     private static final Color OPEN_CELL_BGCOLOR = Color.WHITE;
     private static final Font FONT_NUMBERS = new Font("Monospaced", Font.BOLD, 20);
 
     private static JTextField[][] tfCells = new JTextField[GRID_SIZE][GRID_SIZE];
-    private int nConstrants = 6075;
+    private int nConstraints = DEFAULT_nCONSTRAINT;
 
     /**
      * Constructor to setup the game and the UI Components
@@ -70,9 +70,11 @@ class Sudoku extends JFrame implements ActionListener {
         clear.addActionListener(e -> {
             for (int row = 0; row < GRID_SIZE; ++row) {
                 for (int col = 0; col < GRID_SIZE; ++col) {
-                    tfCells[row][col].setText("");
+                    tfCells[row][col].setText(null);
                 }
             }
+
+            nConstraints = DEFAULT_nCONSTRAINT;
         });
 
         JPanel buttonField = new JPanel();
@@ -100,12 +102,12 @@ class Sudoku extends JFrame implements ActionListener {
             for (int row = 0; row < GRID_SIZE; ++row) {
                 for (int col = 0; col < GRID_SIZE; ++col) {
                     if (!tfCells[row][col].getText().isEmpty()) {
-                        nConstrants++;
+                        nConstraints++;
                     }
                 }
             }
 
-            writer.println(format("p cnf 999 %d", nConstrants));
+            writer.println(format("p cnf 999 %d", nConstraints));
 
             // Lines constraints
             for(int row = 1; row <= 9; row ++){
@@ -273,11 +275,9 @@ class Sudoku extends JFrame implements ActionListener {
             out.println("Error writing to file!");
         }
 
-        // SAT4J
         ISolver solver = SolverFactory.newDefault();
-        solver.setTimeout(3600); // 1 hour timeout
+        solver.setTimeout(3600);
         Reader reader = new DimacsReader(solver);
-        // CNF filename is given on the command line
         try {
             IProblem problem = reader.parseInstance("C:\\Users\\Weslley\\Documents\\sudoku.txt");
             if (problem.isSatisfiable()) {
@@ -291,10 +291,12 @@ class Sudoku extends JFrame implements ActionListener {
             } else {
                 out.println("Unsatisfiable!");
             }
+
+            nConstraints = DEFAULT_nCONSTRAINT;
         } catch (FileNotFoundException e) {
             out.println("File not found.");
         } catch (ParseFormatException e) {
-            out.println("Problem in parsing.");
+            out.println("Problem in parsing. " + e.getMessage());
         } catch (IOException e) {
             out.println(e.getMessage());
         } catch (ContradictionException e) {
@@ -302,6 +304,7 @@ class Sudoku extends JFrame implements ActionListener {
         } catch (TimeoutException e) {
             out.println("Timeout ,sorry!");
         }
+
     }
 
 }
