@@ -27,12 +27,12 @@ import static java.lang.System.out;
  */
 class Sudoku extends JFrame implements ActionListener {
     private static final int GRID_SIZE = 9;
-    private static final int DEFAULT_nCONSTRAINT = 6075;
+    private static final int DEFAULT_NUM_CONSTRAINTS = 6075;
     private static final Color OPEN_CELL_BGCOLOR = Color.WHITE;
     private static final Font FONT_NUMBERS = new Font("Monospaced", Font.BOLD, 20);
 
     private static JTextField[][] tfCells = new JTextField[GRID_SIZE][GRID_SIZE];
-    private int nConstraints = DEFAULT_nCONSTRAINT;
+    private int nConstraints = DEFAULT_NUM_CONSTRAINTS;
 
     /**
      * Constructor to setup the game and the UI Components
@@ -74,7 +74,7 @@ class Sudoku extends JFrame implements ActionListener {
                 }
             }
 
-            nConstraints = DEFAULT_nCONSTRAINT;
+            nConstraints = DEFAULT_NUM_CONSTRAINTS;
         });
 
         JPanel buttonField = new JPanel();
@@ -292,7 +292,7 @@ class Sudoku extends JFrame implements ActionListener {
                 out.println("Unsatisfiable!");
             }
 
-            nConstraints = DEFAULT_nCONSTRAINT;
+            nConstraints = DEFAULT_NUM_CONSTRAINTS;
         } catch (FileNotFoundException e) {
             out.println("File not found.");
         } catch (ParseFormatException e) {
